@@ -3,31 +3,45 @@
 
 #ifdef __CUDACC__ //if running on device do this
 #define ALL __host__ __device__ inline
-#include <curand.h>
+#include <curand.h> //used for generating random number on device code
 #include <curand_kernel.h>
 #else //if running on host do this
 #define ALL 
+#include <iostream>
 #include <stdlib.h> //srand(), rand()
 #include <time.h> //time()
 #endif 
 
-#define MAX 32768 //2^15 used for random functions
-
-/*Prototypes List*/
-ALL unsigned primeGen();
-ALL unsigned rng();
-ALL bool isPrime(unsigned);
+#define MAX 256 //2^8 used for random functions
 
 /*Define Datatypes*/
+
+//Datatype for public key containing n and g
 typedef struct {
 	unsigned n;
 	unsigned g;
 }pubkey;
 
+//Datatype for public key containing lamda and mu
 typedef struct {
 	unsigned lamda;
 	unsigned mu;
 }prvkey;
+
+
+/*Prototypes List*/
+
+ALL unsigned primeGen();
+ALL unsigned setG(unsigned);
+ALL unsigned rng(unsigned);
+ALL bool isPrime(unsigned);
+ALL unsigned gcd(unsigned, unsigned);
+ALL unsigned lcm(unsigned, unsigned);
+ALL unsigned L(unsigned, unsigned);
+ALL unsigned power(unsigned, unsigned);
+ALL unsigned modInverse(unsigned, unsigned);
+ALL bool gCheck(pubkey, prvkey);
+
 
 /*Paillier Functions*/
 
@@ -35,33 +49,64 @@ typedef struct {
 ALL unsigned primeGen() {
 	unsigned rand;
 	do {
-		rand = rng();
+		rand = rng(MAX);
 	} while (!isPrime(rand));
 	return rand;
 }
 
+//Get the proper rand number for g
+ALL unsigned setG(unsigned nsquare) {
+	unsigned rand;
+	do{
+		rand = rng(nsquare);
+	} while (gcd(nsquare, rand) != 1);
+	return rand;
+}
 
 //setup public key and private key
 ALL void setup(pubkey pub, prvkey prv){
 	#ifndef __CUDACC__ //when running on host code
-		
+		srand(time(NULL));//randomize the seed
+		unsigned p = primeGen(); //generating prime number p
+		std::cout << "p: " << p << std::endl;
+
+		unsigned q = primeGen(); //generating prime number q
+		std::cout << "q: " << q << std::endl;
+
+		pub.n = p * q;
+		std::cout << "n: " << pub.n << std::endl;
+
+		pub.g = setG(pub.n*pub.n); //rand num from a set without the factors of n^2
+		std::cout << "g: " << pub.g << std::endl;
+
+		prv.lamda = lcm(p-1,q-1); //lamda = lcm(p-1,q-1)
+		std::cout << "lamda: " << prv.lamda << std::endl;
+
+		unsigned l = L(power(pub.g, prv.lamda) % (pub.n*pub.n),pub.n); //L(g^lamda mod n^2)
+		prv.mu = modInverse(l,pub.n) ;
+		std::cout << "mu: " << prv.mu << std::endl;
+
+		bool flag = gCheck(pub, prv);
+		if (flag)
+			std::cout << "Is g correct: yes" << std::endl;
+		else
+			std::cout << "Is g correct: no" << std::endl;
 	#else //when running on device code
 	#endif
 }
 
 
-
 /*Arithmetic Functions*/
 
-//generates a random number betweeen 0 to 2^15
-ALL unsigned rng(){
+//generates a random number betweeen 0 to 2^8
+ALL unsigned rng(unsigned max){
 	#ifndef __CUDACC__ //when running on host code
-		srand(time(NULL));
-		unsigned num = rand() % MAX + 1;
+		//srand(time(NULL));
+		unsigned num = rand() % max + 1;
 	#else //when running on device code
 		curandState_t state;
 		curand_init(time(NULL), 0, 0, &state);
-		unsigned num = curand(&state) % MAX;
+		unsigned num = curand(&state) % max;
 	#endif
 		return num;
 }
@@ -94,13 +139,55 @@ ALL unsigned lcm(unsigned a, unsigned b){
 	return a * b / gcd(a, b);
 }
 
-
-
 //function L(x)=(x-1)/n
 ALL unsigned L(unsigned x, unsigned n) {
 	return (x - 1) / n;
 }
 
+//power function:  return = base^exp
+ALL unsigned power(unsigned base, unsigned exp = 0) {
+	if (exp <= 0)
+		return 1;
+	return base * power(base, exp - 1);
+}
+
+//Using extended Euclid algorithm to calculate the modulo inverse of ax = 1 (mod m)
+ALL unsigned modInverse(unsigned a, unsigned m){
+	unsigned m0 = m;
+	unsigned y = 0, x = 1;
+
+	if (m == 1)
+		return 0;
+
+	while (a > 1)
+	{
+		// q is quotient
+		unsigned q = a / m;
+		unsigned t = m;
+
+		// m is remainder now, process same as
+		// Euclid's algo
+		m = a % m, a = t;
+		t = y;
+
+		// Update y and x
+		y = x - q * y;
+		x = t;
+	}
+
+	// Make x positive
+	if (x < 0)
+		x += m0;
+
+	return x;
+}
+
+ALL bool gCheck(pubkey pub, prvkey prv){
+	if (gcd(L(power(pub.g, prv.lamda) % (pub.n*pub.n), pub.n), pub.n) == 1)
+		return true;
+	else
+		return false;
+}
 
 
 

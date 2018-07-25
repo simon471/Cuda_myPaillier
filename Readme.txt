@@ -13,3 +13,9 @@ ref_random_example.cuh
 	A reference of how to use random function on CUDA
 	Source: http://cs.umw.edu/~finlayson/class/fall16/cpsc425/notes/cuda-random.html
 	
+	
+Note:
+
+How to use CUDA and CLASS?
+https://stackoverflow.com/questions/6978643/cuda-and-classes
+

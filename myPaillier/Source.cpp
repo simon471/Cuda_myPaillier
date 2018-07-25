@@ -4,9 +4,16 @@ using namespace std;
 
 //testing out functions
 int main() {
+	
 	cout << "program starting..." << endl;
-	cout << primeGen() << endl;
+
+	pubkey publickey;
+	prvkey privatekey;
+	cout << "Variables declared..." << endl;
+
+	setup(publickey, privatekey);
+
+
 	cout << "program ending..." << endl;
 
-	system("pause");
 }
