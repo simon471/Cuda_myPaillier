@@ -1,8 +1,6 @@
 ﻿  Source.cpp
-c:\users\xps 13\desktop\school\2018 spring\summer research\toypaillier\mypaillier\mypaillier\mypail.cuh(69): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
-c:\users\xps 13\desktop\school\2018 spring\summer research\toypaillier\mypaillier\mypaillier\mypail.cuh(117): warning C4018: '<': signed/unsigned mismatch
-c:\users\xps 13\desktop\school\2018 spring\summer research\toypaillier\mypaillier\mypaillier\source.cpp(14): warning C4700: uninitialized local variable 'privatekey' used
-c:\users\xps 13\desktop\school\2018 spring\summer research\toypaillier\mypaillier\mypaillier\source.cpp(14): warning C4700: uninitialized local variable 'publickey' used
+c:\users\xps 13\desktop\school\2018 spring\summer research\toypaillier\mypaillier\mypaillier\mypail.cuh(70): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+c:\users\xps 13\desktop\school\2018 spring\summer research\toypaillier\mypaillier\mypaillier\mypail.cuh(118): warning C4018: '<': signed/unsigned mismatch
   myPaillier.vcxproj -> C:\Users\XPS 13\Desktop\School\2018 Spring\Summer Research\toypaillier\myPaillier\x64\Debug\myPaillier.exe
   copy "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.1\bin\cudart*.dll" "C:\Users\XPS 13\Desktop\School\2018 Spring\Summer Research\toypaillier\myPaillier\x64\Debug\"
   C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.1\bin\cudart32_91.dll
