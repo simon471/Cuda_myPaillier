@@ -34,10 +34,10 @@ typedef struct {
 
 /*Prototypes List*/
 #ifdef __CUDACC__
-ALL unsigned primeGen(unsigned long);
-ALL unsigned setG(unsigned, unsigned long);
+ALL unsigned primeGen();
+ALL unsigned setG(unsigned);
 ALL void setup(pubkey, prvkey);
-ALL unsigned rng(unsigned, unsigned long);
+ALL unsigned rng(unsigned);
 ALL bool isPrime(unsigned);
 ALL unsigned gcd(unsigned, unsigned);
 ALL unsigned lcm(unsigned, unsigned);
@@ -47,10 +47,10 @@ ALL unsigned power(unsigned, unsigned, unsigned);
 ALL unsigned modInverse(unsigned, unsigned);
 ALL bool gCheck(pubkey, prvkey);
 #else
-ALL unsigned primeGen(unsigned long);
-ALL unsigned setG(unsigned, unsigned long);
-ALL void setup(pubkey, prvkey, unsigned long);
-ALL unsigned rng(unsigned, unsigned long);
+ALL unsigned primeGen();
+ALL unsigned setG(unsigned);
+ALL void setup(pubkey, prvkey);
+ALL unsigned rng(unsigned);
 ALL bool isPrime(unsigned);
 ALL unsigned gcd(unsigned, unsigned);
 ALL unsigned lcm(unsigned, unsigned);
@@ -64,38 +64,38 @@ ALL bool gCheck(pubkey, prvkey);
 /*Paillier Functions*/
 
 //find the right prime number for p and q
-ALL unsigned primeGen(unsigned long seed) {
+ALL unsigned primeGen() {
 	unsigned rand;
 	do {
-		rand = rng(MAX,seed);
+		rand = rng(MAX);
 	} while (!isPrime(rand));
 	return rand;
 }
 
 
 //Get the proper rand number for g
-ALL unsigned setG(unsigned nsquare, unsigned long seed) {
+ALL unsigned setG(unsigned nsquare) {
 	unsigned rand;
 	do{
-		rand = rng(nsquare,seed);
+		rand = rng(nsquare);
 	} while (gcd(nsquare, rand) != 1);
 	return rand;
 }
 
 //setup public key and private key
-ALL void setup(pubkey pub, prvkey prv, unsigned long seed){
+ALL void setup(pubkey pub, prvkey prv){
 	#ifndef __CUDACC__ //when running on host code
-		srand(seed);//randomize the seed
-		unsigned p = primeGen(seed); //generating prime number p
+		srand(time(NULL));//randomize the seed
+		unsigned p = primeGen(); //generating prime number p
 		std::cout << "p: " << p << std::endl;
 
-		unsigned q = primeGen(seed); //generating prime number q
+		unsigned q = primeGen(); //generating prime number q
 		std::cout << "q: " << q << std::endl;
 
 		*pub.n = p * q;
 		std::cout << "n: " << *pub.n << std::endl;
 
-		*pub.g = setG((*pub.n)*(*pub.n),seed); //rand num from a set without the factors of n^2
+		*pub.g = setG((*pub.n)*(*pub.n)); //rand num from a set without the factors of n^2
 		std::cout << "g: " << *pub.g << std::endl;
 
 		*prv.lamda = lcm(p-1,q-1); //lamda = lcm(p-1,q-1)
@@ -112,16 +112,16 @@ ALL void setup(pubkey pub, prvkey prv, unsigned long seed){
 			std::cout << "Is g correct: no" << std::endl;
 	#else //when running on device code
 		
-		unsigned p = primeGen(seed); //generating prime number p
+		unsigned p = primeGen(); //generating prime number p
 		printf("p: %d \n", p);
 
-		unsigned q = primeGen(seed); //generating prime number q
+		unsigned q = primeGen(); //generating prime number q
 		printf("q: %d \n", q);
 
 		*pub.n = p * q;
 		printf("n: %d \n",*pub.n);
 
-		*pub.g = setG((*pub.n)*(*pub.n),seed); //rand num from a set without the factors of n^2
+		*pub.g = setG((*pub.n)*(*pub.n)); //rand num from a set without the factors of n^2
 		printf("g: %u \n", *pub.g);
 
 		*prv.lamda = lcm(p - 1, q - 1); //lamda = lcm(p-1,q-1)
@@ -143,13 +143,13 @@ ALL void setup(pubkey pub, prvkey prv, unsigned long seed){
 /*Arithmetic Functions*/
 
 //generates a random number betweeen 0 to 2^8
-ALL unsigned rng(unsigned max, unsigned long seed){
+ALL unsigned rng(unsigned max){
 	#ifndef __CUDACC__ //when running on host code
 		//srand(seed);
 		unsigned num = rand() % max + 1;
 	#else //when running on device code
 		curandState_t state;
-		curand_init(seed, 0, 0, &state);
+		curand_init((unsigned long long)clock(), 0, 0, &state);
 		unsigned num = curand(&state) % max;
 	#endif
 		return num;

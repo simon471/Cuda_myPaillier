@@ -7,11 +7,11 @@
 
 
 
-__global__ void test(pubkey pub, prvkey prv, unsigned long seed) {
+__global__ void test(pubkey pub, prvkey prv) {
 	printf("printing device memory (pub_d, prv_d): \n\n");
 
 	//setting up device variable (generating public key and device key)
-	setup(pub, prv, seed);
+	setup(pub, prv);
 	
 	printf("\n");
 }
@@ -32,11 +32,8 @@ int main() {
 	cudaMalloc(&pub_d.g, size);
 	cudaMalloc(&prv_d.lamda, size);
 	cudaMalloc(&prv_d.mu, size);
-	//generating seed
-	time_t seed;
-	time(&seed);
 	//running function on device
-	test <<<1, 1 >> > (pub_d, prv_d, (unsigned long)seed);
+	test <<<1, 1 >>> (pub_d,prv_d);
 	//waiting device to finish its job
 	cudaDeviceSynchronize();
 	//copy device memory to host memory
