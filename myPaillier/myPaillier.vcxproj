@@ -14,7 +14,7 @@
     <ClInclude Include="mypail.cuh" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Source.cpp" />
+    <CudaCompile Include="test.cu" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{1316C173-A63A-4527-BBCF-BB7A1F086A60}</ProjectGuid>

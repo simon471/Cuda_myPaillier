@@ -37,8 +37,7 @@ typedef struct {
 #ifdef __CUDACC__
 ALL unsigned primeGen();
 ALL unsigned setG(unsigned);
- void initial(pubkey*, prvkey*);
-ALL void setup(pubkey*, prvkey*);
+ALL void setup(pubkey, prvkey);
 ALL unsigned rng(unsigned);
 ALL bool isPrime(unsigned);
 ALL unsigned gcd(unsigned, unsigned);
@@ -47,12 +46,11 @@ ALL unsigned L(unsigned, unsigned);
 ALL unsigned power(unsigned, unsigned);
 ALL unsigned power(unsigned, unsigned, unsigned);
 ALL unsigned modInverse(unsigned, unsigned);
-ALL bool gCheck(pubkey*, prvkey*);
+ALL bool gCheck(pubkey, prvkey);
 #else
 ALL unsigned primeGen();
 ALL unsigned setG(unsigned);
-void initial(pubkey*, prvkey*);
-ALL void setup(pubkey*, prvkey*);
+ALL void setup(pubkey, prvkey);
 ALL unsigned rng(unsigned);
 ALL bool isPrime(unsigned);
 ALL unsigned gcd(unsigned, unsigned);
@@ -61,7 +59,7 @@ ALL unsigned L(unsigned, unsigned);
 ALL unsigned power(unsigned, unsigned);
 ALL unsigned power(unsigned, unsigned, unsigned);
 ALL unsigned modInverse(unsigned, unsigned);
-ALL bool gCheck(pubkey*, prvkey*);
+ALL bool gCheck(pubkey, prvkey);
 #endif
 
 /*Paillier Functions*/
@@ -84,16 +82,8 @@ ALL unsigned setG(unsigned nsquare) {
 	return rand;
 }
 
-void initial(pubkey* pub, prvkey* prv) {
-
-	pub->n = (unsigned)0;
-	pub->g = (unsigned)0;
-	prv->lamda = (unsigned)0;
-	prv->mu = (unsigned)0;
-}
-
 //setup public key and private key
-ALL void setup(pubkey* pub, prvkey* prv){
+ALL void setup(pubkey pub, prvkey prv){
 	#ifndef __CUDACC__ //when running on host code
 		srand(time(NULL));//randomize the seed
 		unsigned p = primeGen(); //generating prime number p
@@ -102,18 +92,18 @@ ALL void setup(pubkey* pub, prvkey* prv){
 		unsigned q = primeGen(); //generating prime number q
 		std::cout << "q: " << q << std::endl;
 
-		*pub->n = p * q;
-		std::cout << "n: " << *pub->n << std::endl;
+		*pub.n = p * q;
+		std::cout << "n: " << *pub.n << std::endl;
 
-		*pub->g = setG((*pub->n)*(*pub->n)); //rand num from a set without the factors of n^2
-		std::cout << "g: " << *pub->g << std::endl;
+		*pub.g = setG((*pub.n)*(*pub.n)); //rand num from a set without the factors of n^2
+		std::cout << "g: " << *pub.g << std::endl;
 
-		*prv->lamda = lcm(p-1,q-1); //lamda = lcm(p-1,q-1)
-		std::cout << "lamda: " << *prv->lamda << std::endl;
+		*prv.lamda = lcm(p-1,q-1); //lamda = lcm(p-1,q-1)
+		std::cout << "lamda: " << *prv.lamda << std::endl;
 
-		unsigned l = L(power(*pub->g, *prv->lamda , (*pub->n)*(*pub->n)), *pub->n); //L(g^lamda mod n^2)
-		*prv->mu = modInverse(l, *pub->n) ;
-		std::cout << "mu: " << *prv->mu << std::endl;
+		unsigned l = L(power(*pub.g, *prv.lamda , (*pub.n)*(*pub.n)), *pub.n); //L(g^lamda mod n^2)
+		*prv.mu = modInverse(l, *pub.n) ;
+		std::cout << "mu: " << *prv.mu << std::endl;
 
 		bool flag = gCheck(pub, prv);
 		if (flag)
@@ -122,35 +112,24 @@ ALL void setup(pubkey* pub, prvkey* prv){
 			std::cout << "Is g correct: no" << std::endl;
 	#else //when running on device code
 		
-	//something wrong with using variables from the structure !!!!!!!!!!!
-		unsigned n, g, lamda, mu = (unsigned)0;
-		pub->n = &n;
-		pub->g = &g;
-		prv->lamda = &lamda;
-		prv->mu = &mu;
-		
-
-
 		unsigned p = primeGen(); //generating prime number p
 		printf("p: %d \n", p);
 
 		unsigned q = primeGen(); //generating prime number q
 		printf("q: %d \n", q);
 
-		printf("p*q: %u \n", (p*q));
+		*pub.n = p * q;
+		printf("n: %d \n",*pub.n);
 
-		*pub->n = p * q;
-		printf("n: %d \n",*pub->n);
+		*pub.g = setG((*pub.n)*(*pub.n)); //rand num from a set without the factors of n^2
+		printf("g: %u \n", *pub.g);
 
-		*pub->g = setG((*pub->n)*(*pub->n)); //rand num from a set without the factors of n^2
-		printf("g: %u \n", *pub->g);
+		*prv.lamda = lcm(p - 1, q - 1); //lamda = lcm(p-1,q-1)
+		printf("lamda: %d \n", *prv.lamda);
 
-		*prv->lamda = lcm(p - 1, q - 1); //lamda = lcm(p-1,q-1)
-		printf("lamda: %d \n", *prv->lamda);
-
-		unsigned l = L(power(*pub->g, *prv->lamda, (*pub->n)*(*pub->n)), *pub->n); //L(g^lamda mod n^2)
-		*prv->mu = modInverse(l, *pub->n);
-		printf("mu: %d \n", *prv->mu);
+		unsigned l = L(power(*pub.g, *prv.lamda, (*pub.n)*(*pub.n)), *pub.n); //L(g^lamda mod n^2)
+		*prv.mu = modInverse(l, *pub.n);
+		printf("mu: %d \n", *prv.mu);
 
 		bool flag = gCheck(pub, prv);
 		if (flag)
@@ -238,7 +217,7 @@ ALL unsigned power(unsigned x, unsigned y, unsigned p)
 
 //Using extended Euclid algorithm to calculate the modulo inverse of ax = 1 (mod m)
 ALL unsigned modInverse(unsigned a, unsigned m){
-	unsigned m0 = m;
+	//unsigned m0 = m;
 	unsigned y = 0, x = 1;
 
 	if (m == 1)
@@ -261,14 +240,14 @@ ALL unsigned modInverse(unsigned a, unsigned m){
 	}
 
 	 //Make x positive
-	if (x < 0)
-		x += m0;
+	//if (x < 0)
+	//	x += m0;
 
 	return x;
 }
 
-ALL bool gCheck(pubkey* pub, prvkey* prv){
-	if (gcd(L(power(*pub->g, *prv->lamda,((*pub->n)*(*pub->n))), *pub->n), *pub->n) == 1)
+ALL bool gCheck(pubkey pub, prvkey prv){
+	if (gcd(L(power(*pub.g, *prv.lamda,((*pub.n)*(*pub.n))), *pub.n), *pub.n) == 1)
 		return true;
 	else
 		return false;
