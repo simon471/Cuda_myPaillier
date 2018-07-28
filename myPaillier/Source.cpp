@@ -1,4 +1,5 @@
 #include <iostream>
+#include <time.h> //time()
 #include "mypail.cuh"
 using namespace std;
 
@@ -12,12 +13,11 @@ int main() {
 	prvkey privatekey;
 	cout << "Variables declared..." << endl;
 
-	cout << "Initializing keys..." << endl;
-	initial(&publickey, &privatekey);
-	cout << "Keys initialized..." << endl;
-
 	cout << "Setting up key values..." << endl;
-	setup(&publickey, &privatekey);
+	time_t seed;
+	time(&seed);
+
+	setup(publickey, privatekey,(unsigned long)seed);
 	cout << "Key generation done..." << endl;
 
 	cout << "program ending..." << endl;

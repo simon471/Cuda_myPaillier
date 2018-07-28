@@ -1,16 +1,17 @@
 #include "cuda_runtime.h"
 #include "cuda.h"
-#include "device_launch_parameters.h"
+#include "device_launch_parameters.h" //__global__
 #include "stdio.h"
 #include "mypail.cuh"
+#include <time.h> //time()
 
 
 
-__global__ void test(pubkey pub, prvkey prv) {
+__global__ void test(pubkey pub, prvkey prv, unsigned long seed) {
 	printf("printing device memory (pub_d, prv_d): \n\n");
 
 	//setting up device variable (generating public key and device key)
-	setup(pub, prv);
+	setup(pub, prv, seed);
 	
 	printf("\n");
 }
@@ -31,8 +32,11 @@ int main() {
 	cudaMalloc(&pub_d.g, size);
 	cudaMalloc(&prv_d.lamda, size);
 	cudaMalloc(&prv_d.mu, size);
+	//generating seed
+	time_t seed;
+	time(&seed);
 	//running function on device
-	test <<<1, 1 >>> (pub_d, prv_d);
+	test <<<1, 1 >> > (pub_d, prv_d, (unsigned long)seed);
 	//waiting device to finish its job
 	cudaDeviceSynchronize();
 	//copy device memory to host memory
