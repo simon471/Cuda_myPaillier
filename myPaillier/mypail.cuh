@@ -247,7 +247,7 @@ ALL unsigned long long mulmod(unsigned long long a, unsigned long long b, unsign
 //Using extended Euclid algorithm to calculate the modulo inverse of ax = 1 (mod m)
 ALL unsigned long long modInverse(unsigned long long a, unsigned long long m){
 	unsigned long long m0 = m;
-	int y = 0, x = 1;
+	long long int y = 0, x = 1;
 
 	if (m == 1)
 		return 0;
