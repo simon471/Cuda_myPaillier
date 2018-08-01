@@ -14,7 +14,7 @@ int main() {
 	cout << ">> Declaring variables..." << endl;
 	pubkey publickey;
 	prvkey privatekey;
-	int n = 10;
+	int n = 1000;
 	string messageFile = "message.txt";
 	string cipherFile = "cipher.txt";
 	string message2File = "message2.txt";
@@ -72,8 +72,11 @@ int main() {
 	*/
 	cout << ">> Encryption and decryption process done..." << endl<<endl;
 
-
-
+	cout << ">> Freeing memory of the arrays..." << endl;
+	delete[] message;
+	delete[] cipher;
+	delete[] message2;
+	cout << "memory freed..." << endl << endl;
 	cout << "program ending..." << endl<<endl;
 
 }
