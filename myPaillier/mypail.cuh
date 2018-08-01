@@ -9,10 +9,13 @@
 #include <curand_kernel.h>
 #include <stdio.h>
 
+
 #else //if running on host do this
 #define ALL 
 #include <iostream>
 #include <stdlib.h> //srand(), rand()
+#include <fstream> //file read and write
+#include <string>
 #endif 
 
 #define MAX 65536 //2^16 used for random functions
@@ -138,6 +141,49 @@ ALL unsigned long long dec(pubkey pub,prvkey prv, unsigned long long c) {
 	unsigned long long l = L(p1, *pub.n);
 	unsigned long long m = mulmod(l, *prv.mu, *pub.n);
 	return m;
+}
+
+//File read and write
+
+//create a file with nth random numbers
+void genRandFile(pubkey pub,std::string filename, int n) {
+	std::ofstream file (filename);
+	if (file.is_open()) {
+		for (int i = 0; i < n; i++) {
+			file << rng(*pub.n) << "\n";
+		}
+		file.close();
+	}
+}
+
+//create a file
+void createFile(std::string filename) {
+	std::ofstream file(filename);
+	file.close();
+}
+
+//write cipher array into file
+void writeFile(unsigned long long* carry, std::string filename, int n){
+	std::ofstream file(filename);
+	if (file.is_open()) {
+		for (int i = 0; i < n; i++) {
+			file << *(carry + i) << "\n";
+		}
+		file.close();
+	}
+	else std::cout << "Unable to open file"<<std::endl;
+}
+
+//read file into array
+void readFile(unsigned long long* marray, std::string filename, int n){
+	std::ifstream file(filename);
+	unsigned long long value;
+	for (int i = 0; file >> value; i++) // While file can be read in
+	{
+		*(marray + i) = value;
+	}
+	file.close();
+	
 }
 
 
