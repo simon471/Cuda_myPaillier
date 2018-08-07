@@ -8,6 +8,9 @@
 #include <curand.h> //used for generating random number on device code
 #include <curand_kernel.h>
 #include <stdio.h>
+#include <iostream>
+#include <fstream> //file read and write
+#include <string>
 
 
 #else //if running on host do this
@@ -43,6 +46,7 @@ ALL void setup(pubkey, prvkey);
 ALL unsigned long long enc(pubkey, unsigned long long);
 ALL unsigned long long dec(pubkey, prvkey, unsigned long long);
 ALL unsigned long long rng(unsigned long long);
+unsigned long long rnghost(unsigned long long);
 ALL bool isPrime(unsigned long long);
 ALL unsigned long long gcd(unsigned long long, unsigned long long);
 ALL unsigned long long lcm(unsigned long long, unsigned long long);
@@ -59,6 +63,7 @@ ALL void setup(pubkey, prvkey);
 ALL unsigned long long enc(pubkey, unsigned long long);
 ALL unsigned long long dec(pubkey, prvkey, unsigned long long);
 ALL unsigned long long rng(unsigned long long);
+unsigned long long rnghost(unsigned long long);
 ALL bool isPrime(unsigned long long);
 ALL unsigned long long gcd(unsigned long long, unsigned long long);
 ALL unsigned long long lcm(unsigned long long, unsigned long long);
@@ -148,9 +153,10 @@ ALL unsigned long long dec(pubkey pub,prvkey prv, unsigned long long c) {
 //create a file with nth random numbers
 void genRandFile(pubkey pub,std::string filename, int n) {
 	std::ofstream file (filename);
+	srand(time(NULL));
 	if (file.is_open()) {
 		for (int i = 0; i < n; i++) {
-			file << rng(*pub.n) << "\n";
+			file << rnghost(*pub.n) << "\n";
 		}
 		file.close();
 	}
@@ -201,6 +207,12 @@ ALL unsigned long long rng(unsigned long long max){
 	#endif
 		return num;
 }
+
+unsigned long long rnghost(unsigned long long max) {
+	unsigned long long num = rand() % max + 1;
+	return num;
+}
+
 
 //check if the number is a prime number
 ALL bool isPrime(unsigned long long n){

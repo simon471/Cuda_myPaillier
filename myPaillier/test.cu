@@ -4,10 +4,11 @@
 #include "stdio.h"
 #include "mypail.cuh"
 #include <time.h> //time()
+#include <string>
 
 
 
-__global__ void test(pubkey pub, prvkey prv) {
+__global__ void keygen(pubkey pub, prvkey prv) {
 	printf("calculating device key memory (pub_d, prv_d)\n");
 
 	//setting up device variable (generating public key and device key)
@@ -16,14 +17,30 @@ __global__ void test(pubkey pub, prvkey prv) {
 	printf("\n");
 }
 
-__global__ void encryption(pubkey pub, unsigned long long* m, unsigned long long* c) {
-	*c = enc(pub, *m);
-	printf("device cypher message: %llu\n", *c);
+__global__ void encryption(pubkey pub, unsigned long long* m, unsigned long long* c, int n) {
+	int index = threadIdx.x;
+	int stride = blockDim.x;
+	for (int i = index; i < n; i += stride) {
+		*(c + i) = enc(pub, *(m + i));
+	}
+	printf("device encryption done\n\n");
 }
 
-__global__ void decryption(pubkey pub, prvkey prv, unsigned long long* c, unsigned long long* m2) {
-	*m2 = dec(pub, prv, *c);
-	printf("device decrypted message: %llu\n", *m2);
+__global__ void decryption(pubkey pub, prvkey prv, unsigned long long* c, unsigned long long* m2, int n) {
+	int index = threadIdx.x;
+	int stride = blockDim.x;
+	for (int i = index; i < n; i += stride) {
+		*(m2 + i) = dec(pub, prv, *(c + i));
+	}
+	printf("device decryption done\n\n");
+	
+}
+
+void printArr(unsigned long long* c, int n) {
+	std::cout << "Printing array... :" << std::endl;
+	for (int i = 0; i < n; i++) {
+		std::cout << *(c + i) << std::endl;
+	}
 }
 
 int main() {
@@ -46,7 +63,7 @@ int main() {
 	cudaMalloc(&prv_d.mu, size);
 	//running function on device
 	printf("running device function...\n\n");
-	test <<<1, 1 >>> (pub_d,prv_d);
+	keygen <<<1, 1 >>> (pub_d,prv_d);
 	//waiting device to finish its job
 	printf("waiting device to finish...\n\n");
 	cudaDeviceSynchronize();
@@ -67,12 +84,13 @@ int main() {
 
 	//--------------------Encrytion and Decryption--------------------//
 	printf("creating host and device variables for enc and dec...\n\n");
-	//create message for encryption
-	unsigned long long m = 123;
-	//create cypher
-	unsigned long long c;
-	//create message for decryption
-	unsigned long long m2;
+	std::string messageFile = "message.txt";
+	std::string cipherFile = "cipher.txt";
+	std::string message2File = "message2.txt";
+	int n = 30000;
+	unsigned long long* m = (unsigned long long*)malloc(n*size);
+	unsigned long long* c = (unsigned long long*)malloc(n*size);
+	unsigned long long* m2 = (unsigned long long*)malloc(n*size);
 
 	//same variables for device
 	unsigned long long* dm;
@@ -80,25 +98,39 @@ int main() {
 	unsigned long long* dm2;
 	//allocate memory to device variable
 	printf("allocating device memory...\n\n");
-	cudaMalloc(&dm, size);
-	cudaMalloc(&dc, size);
-	cudaMalloc(&dm2, size);
+	cudaMalloc(&dm, n*size);
+	cudaMalloc(&dc, n*size);
+	cudaMalloc(&dm2, n*size);
+	cudaMemset(&dm, 0, n*size);
+	cudaMemset(&dc, 0, n*size);
+	cudaMemset(&dm2, 0, n*size);
+	//generating message in host message array
+	printf("generating message in file...\n\n");
+	genRandFile(pub, messageFile, n);
+	//read the message into host array
+	printf("reading message into host array...\n\n");
+	readFile(m, messageFile, n);
+	//printArr(m, n);
 	//copy host message to device message
 	printf("copying message to devcie variable...\n\n");
-	cudaMemcpy(dm, &m, size, cudaMemcpyHostToDevice);
-
-	printf("message for encrytion: %llu\n\n", m);
-
+	
+	cudaMemcpy(dm,m, n*size, cudaMemcpyHostToDevice);
+	//starting encryption process
 	printf("starting to encrypt the message... \n\n");
-	encryption << <1, 1 >> > (pub_d, dm, dc);  //using encryption function
-	cudaMemcpy(&c, dc, size, cudaMemcpyDeviceToHost); //copy cypher message to host
-	printf("host cypher message: %llu\n\n",c);
-
+	encryption <<<(n+255)/256, 256 >>> (pub_d, dm, dc,n);  //using encryption function
+	
+	cudaMemcpy(c, dc, n*size, cudaMemcpyDeviceToHost); //copy cypher message to host
+	//copy cipher text to file
+	createFile(cipherFile);
+	writeFile(c, cipherFile, n);
+	//starting to decrypt cipher text
 	printf("starting to decrypt the cypher... \n");
-	decryption << <1, 1 >> > (pub_d, prv_d, dc, dm2);  //using decryption function
-	cudaMemcpy(&m2, dm2, size, cudaMemcpyDeviceToHost);  //copy decrpted message to host
-	printf("host decrypted message: %llu\n\n",m2);
-
+	decryption << <(n + 255) / 256, 256 >> >(pub_d, prv_d, dc, dm2,n);  //using decryption function
+	
+	cudaMemcpy(m2, dm2, n*size, cudaMemcpyDeviceToHost);  //copy decrpted message to host
+	//copy decrypted message to file
+	createFile(message2File);
+	writeFile(m2, message2File, n);
 	//free the device memory
 	printf("Freeing device memory\n\n");
 	cudaFree(pub_d.n);
@@ -108,7 +140,10 @@ int main() {
 	cudaFree(dm);
 	cudaFree(dc);
 	cudaFree(dm2);
-
+	printf("Freeing host memory\n\n");
+	delete[] m;
+	delete[] c;
+	delete[] m2;
 
 	printf("program ending... \n\n");
 }
