@@ -153,7 +153,7 @@ ALL unsigned long long dec(pubkey pub,prvkey prv, unsigned long long c) {
 //create a file with nth random numbers
 void genRandFile(pubkey pub,std::string filename, int n) {
 	std::ofstream file (filename);
-	srand(time(NULL));
+	//srand(time(NULL));
 	if (file.is_open()) {
 		for (int i = 0; i < n; i++) {
 			file << rnghost(*pub.n) << "\n";
@@ -208,8 +208,8 @@ ALL unsigned long long rng(unsigned long long max){
 		return num;
 }
 
-unsigned long long rnghost(unsigned long long max) {
-	unsigned long long num = rand() % max + 1;
+unsigned long long rnghost(unsigned long long x) {
+	unsigned long long num = rand() % x + 1;
 	return num;
 }
 
