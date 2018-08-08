@@ -5,6 +5,8 @@
 #include "mypail.cuh"
 #include <time.h> //time()
 #include <string>
+#include <ctime>
+#include <chrono>
 
 
 
@@ -18,22 +20,14 @@ __global__ void keygen(pubkey pub, prvkey prv) {
 }
 
 __global__ void encryption(pubkey pub, unsigned long long* m, unsigned long long* c, int n) {
-	int index = threadIdx.x;
-	int stride = blockDim.x;
-	for (int i = index; i < n; i += stride) {
-		*(c + i) = enc(pub, *(m + i));
-	}
-	printf("device encryption done\n\n");
+	int i = blockIdx.x*blockDim.x + threadIdx.x;
+	if (i < n) *(c + i) = enc(pub, *(m + i));
+
 }
 
 __global__ void decryption(pubkey pub, prvkey prv, unsigned long long* c, unsigned long long* m2, int n) {
-	int index = threadIdx.x;
-	int stride = blockDim.x;
-	for (int i = index; i < n; i += stride) {
-		*(m2 + i) = dec(pub, prv, *(c + i));
-	}
-	printf("device decryption done\n\n");
-	
+	int i = blockIdx.x*blockDim.x + threadIdx.x;
+	if (i < n) *(m2 + i) = dec(pub, prv, *(c + i));
 }
 
 void printArr(unsigned long long* c, int n) {
@@ -87,7 +81,9 @@ int main() {
 	std::string messageFile = "message.txt";
 	std::string cipherFile = "cipher.txt";
 	std::string message2File = "message2.txt";
-	int n = 30000;
+	int n = 100000;
+	int block = (n + 31) /32;
+	int thread = 32;
 	unsigned long long* m = (unsigned long long*)malloc(n*size);
 	unsigned long long* c = (unsigned long long*)malloc(n*size);
 	unsigned long long* m2 = (unsigned long long*)malloc(n*size);
@@ -113,21 +109,27 @@ int main() {
 	//printArr(m, n);
 	//copy host message to device message
 	printf("copying message to devcie variable...\n\n");
-	
+	auto begin = std::chrono::steady_clock::now();
 	cudaMemcpy(dm,m, n*size, cudaMemcpyHostToDevice);
+	auto end = std::chrono::steady_clock::now();
+
 	//starting encryption process
 	printf("starting to encrypt the message... \n\n");
-	encryption <<<(n+255)/256, 256 >>> (pub_d, dm, dc,n);  //using encryption function
+	encryption <<<block, thread >>> (pub_d, dm, dc,n);  //using encryption function
 	
+	auto begin2 = std::chrono::steady_clock::now();
 	cudaMemcpy(c, dc, n*size, cudaMemcpyDeviceToHost); //copy cypher message to host
+	auto end2 = std::chrono::steady_clock::now();
 	//copy cipher text to file
 	createFile(cipherFile);
 	writeFile(c, cipherFile, n);
 	//starting to decrypt cipher text
 	printf("starting to decrypt the cypher... \n");
-	decryption << <(n + 255) / 256, 256 >> >(pub_d, prv_d, dc, dm2,n);  //using decryption function
-	
+	decryption << <block, thread >> >(pub_d, prv_d, dc, dm2,n);  //using decryption function
+	//time
+	auto begin1 = std::chrono::steady_clock::now();
 	cudaMemcpy(m2, dm2, n*size, cudaMemcpyDeviceToHost);  //copy decrpted message to host
+	auto end1 = std::chrono::steady_clock::now();
 	//copy decrypted message to file
 	createFile(message2File);
 	writeFile(m2, message2File, n);
@@ -144,6 +146,27 @@ int main() {
 	delete[] m;
 	delete[] c;
 	delete[] m2;
+
+	//Printing time results
+	printf("Message from host to device: \n\n");
+	std::cout << "Elapsed time in nanoseconds: " << std::chrono::duration_cast<std::chrono::nanoseconds> (end - begin).count() << " ns" << std::endl;
+	std::cout << "Elapsed time in microseconds: " << std::chrono::duration_cast<std::chrono::microseconds> (end - begin).count() << " mus" << std::endl;
+	std::cout << "Elapsed time in milliseconds: " << std::chrono::duration_cast<std::chrono::milliseconds> (end - begin).count() << " ms" << std::endl;
+	std::cout << "Elapsed time in seconds: " << std::chrono::duration_cast<std::chrono::seconds> (end - begin).count() << " s" << std::endl;
+
+	//Printing time results
+	printf("Cipher from device to host: \n\n");
+	std::cout << "Elapsed time in nanoseconds: " << std::chrono::duration_cast<std::chrono::nanoseconds> (end2 - begin2).count() << " ns" << std::endl;
+	std::cout << "Elapsed time in microseconds: " << std::chrono::duration_cast<std::chrono::microseconds> (end2 - begin2).count() << " mus" << std::endl;
+	std::cout << "Elapsed time in milliseconds: " << std::chrono::duration_cast<std::chrono::milliseconds> (end2 - begin2).count() << " ms" << std::endl;
+	std::cout << "Elapsed time in seconds: " << std::chrono::duration_cast<std::chrono::seconds> (end2 - begin2).count() << " s" << std::endl;
+
+	//Printing time results
+	printf("Decrypted message form device to host: \n\n");
+	std::cout << "Elapsed time in nanoseconds: " << std::chrono::duration_cast<std::chrono::nanoseconds> (end1 - begin1).count() << " ns" << std::endl;
+	std::cout << "Elapsed time in microseconds: " << std::chrono::duration_cast<std::chrono::microseconds> (end1 - begin1).count() << " mus" << std::endl;
+	std::cout << "Elapsed time in milliseconds: " << std::chrono::duration_cast<std::chrono::milliseconds> (end1 - begin1).count() << " ms" << std::endl;
+	std::cout << "Elapsed time in seconds: " << std::chrono::duration_cast<std::chrono::seconds> (end1 - begin1).count() << " s" << std::endl;
 
 	printf("program ending... \n\n");
 }

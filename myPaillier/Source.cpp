@@ -2,6 +2,8 @@
 #include <time.h> //time()
 #include "mypail.cuh"
 #include <string>
+#include <ctime>
+#include <chrono>
 using namespace std;
 
 //testing out functions
@@ -14,7 +16,7 @@ int main() {
 	cout << ">> Declaring variables..." << endl;
 	pubkey publickey;
 	prvkey privatekey;
-	int n = 1000;
+	int n = 100000;
 	string messageFile = "message.txt";
 	string cipherFile = "cipher.txt";
 	string message2File = "message2.txt";
@@ -38,10 +40,17 @@ int main() {
 	
 	cout << ">> Starting encryption and decryption process..." << endl<<endl;
 
-	cout << ">> Encrypting message array..." << endl;
+	//timer
+	auto begin = chrono::steady_clock::now();
+
+	//cout << ">> Encrypting message array..." << endl;
 	for (int i = 0; i < n; i++) {
 		*(cipher + i) = enc(publickey, *(message + i));
 	}
+
+	auto end = chrono::steady_clock::now();
+
+
 	cout << "Message encrypted..." << endl << endl;
 
 	cout << ">> copying cipher array to file..." << endl;
@@ -77,6 +86,13 @@ int main() {
 	delete[] cipher;
 	delete[] message2;
 	cout << "memory freed..." << endl << endl;
+
+	//Printing time results
+	cout << "Elapsed time in nanoseconds: " << chrono::duration_cast<chrono::nanoseconds> (end - begin).count() << " ns" << endl;
+	cout << "Elapsed time in microseconds: " << chrono::duration_cast<chrono::microseconds> (end - begin).count() << " mus" << endl;
+	cout << "Elapsed time in milliseconds: " << chrono::duration_cast<chrono::milliseconds> (end - begin).count() << " ms" << endl;
+	cout << "Elapsed time in seconds: " << chrono::duration_cast<chrono::seconds> (end - begin).count() << " s" << endl;
+
 	cout << "program ending..." << endl<<endl;
 
 }
