@@ -11,6 +11,8 @@
 #include <iostream>
 #include <fstream> //file read and write
 #include <string>
+#include <random>
+#include <limits>
 
 
 #else //if running on host do this
@@ -19,6 +21,8 @@
 #include <stdlib.h> //srand(), rand()
 #include <fstream> //file read and write
 #include <string>
+#include <random>
+#include <limits>
 #endif 
 
 #define MAX 65536 //2^16 used for random functions
@@ -100,17 +104,25 @@ ALL unsigned long long getRandZ(unsigned long long x) {
 ALL void setup(pubkey pub, prvkey prv){
 	#ifndef __CUDACC__ //when running on host code
 		srand(time(NULL));//randomize the seed
-		unsigned long long p =  primeGen(); //generating prime number p
-		unsigned long long q =  primeGen(); //generating prime number q
-		*pub.n = p * q;
+		unsigned long long p;
+		unsigned long long q;
+		do {
+			p = primeGen(); //generating prime number p
+			q = primeGen(); //generating prime number q
+			*pub.n = p * q;
+		} while (*pub.n < 100000000);
 		*pub.g = getRandZ((*pub.n)*(*pub.n)); //rand num from a set without the factors of n^2
 		*prv.lamda = lcm(p-1,q-1); //lamda = lcm(p-1,q-1)
 		unsigned long long l = L(power(*pub.g, *prv.lamda , (*pub.n)*(*pub.n)), *pub.n); //L(g^lamda mod n^2)
 		*prv.mu = modInverse(l, *pub.n) ;
 	#else //running on device code
-		unsigned long long p = primeGen(); //generating prime number p
-		unsigned long long q = primeGen(); //generating prime number q
-		*pub.n = p * q;
+		unsigned long long p;
+		unsigned long long q;
+		do {
+			p = primeGen(); //generating prime number p
+			q = primeGen(); //generating prime number q
+			*pub.n = p * q;
+		} while (*pub.n < 100000000);
 		*pub.g = getRandZ((*pub.n)*(*pub.n)); //rand num from a set without the factors of n^2
 		*prv.lamda = lcm(p - 1, q - 1); //lamda = lcm(p-1,q-1)
 		unsigned long long l = L(power(*pub.g, *prv.lamda, (*pub.n)*(*pub.n)), *pub.n); //L(g^lamda mod n^2)
@@ -156,7 +168,7 @@ void genRandFile(pubkey pub,std::string filename, int n) {
 	//srand(time(NULL));
 	if (file.is_open()) {
 		for (int i = 0; i < n; i++) {
-			file << rnghost(*pub.n) << "\n";
+			file << rnghost(10000000) << "\n";
 		}
 		file.close();
 	}
@@ -192,14 +204,50 @@ void readFile(unsigned long long* marray, std::string filename, int n){
 	
 }
 
+void keyWriteFile(pubkey pub, std::string filename) {
+	std::ofstream file(filename);
+	if (file.is_open()) {
+		file << *pub.n << "\n";
+		file << *pub.g << "\n";
+		file.close();
+	}
+}
+
+void keyWriteFile(prvkey prv, std::string filename) {
+	std::ofstream file(filename);
+	if (file.is_open()) {
+		file << *prv.lamda << "\n";
+		file << *prv.mu << "\n";
+		file.close();
+	}
+}
+
+void keyReadFile(pubkey pub, std::string filename) {
+	std::ifstream file(filename);
+	file >> *pub.n;
+	file >> *pub.g;
+	file.close();
+
+}
+
+void keyReadFile(prvkey prv, std::string filename) {
+	std::ifstream file(filename);
+	file >> *prv.lamda;
+	file >> *prv.mu;
+	file.close();
+
+}
+
 
 /*Arithmetic Functions*/
 
 //generates a random number betweeen 0 to 2^8
 ALL unsigned long long rng(unsigned long long max){
 	#ifndef __CUDACC__ //when running on host code
-		//srand(seed);
-		unsigned long long num = rand() % max + 1;
+	std::random_device rd;
+	std::mt19937_64 eng(rd());
+	std::uniform_int_distribution<unsigned long long> distr;
+	unsigned long long num = distr(eng) % max + 1;
 	#else //when running on device code
 		curandState_t state;
 		curand_init((unsigned long long)clock(), 0, 0, &state);
@@ -209,7 +257,10 @@ ALL unsigned long long rng(unsigned long long max){
 }
 
 unsigned long long rnghost(unsigned long long x) {
-	unsigned long long num = rand() % x + 1;
+	std::random_device rd; 
+	std::mt19937_64 eng(rd()); 
+	std::uniform_int_distribution<unsigned long long> distr;
+	unsigned long long num = distr(eng) % x + 1;
 	return num;
 }
 
