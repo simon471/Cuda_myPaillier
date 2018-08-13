@@ -40,6 +40,9 @@ randPail.cuh
 	contains rng functions
 
 [Test record]
+n(# of messages): 100000
+block: (n-31)/32
+thread: 32
 		  cpu	  gpu
 enc		 29 s	 42 ms
 dec		  8 s	 26 ms
