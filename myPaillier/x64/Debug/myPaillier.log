@@ -1,7 +1,4 @@
-﻿  Source.cpp
-c:\users\xps 13\desktop\school\2018 spring\summer research\toypaillier\mypaillier\mypaillier\mypail.cuh(106): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
-c:\users\xps 13\desktop\school\2018 spring\summer research\toypaillier\mypaillier\mypaillier\mypail.cuh(153): warning C4715: 'enc': not all control paths return a value
-  myPaillier.vcxproj -> C:\Users\XPS 13\Desktop\School\2018 Spring\Summer Research\toypaillier\myPaillier\x64\Debug\myPaillier.exe
+﻿  myPaillier.vcxproj -> C:\Users\XPS 13\Desktop\School\2018 Spring\Summer Research\toypaillier\myPaillier\x64\Debug\myPaillier.exe
   copy "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.1\bin\cudart*.dll" "C:\Users\XPS 13\Desktop\School\2018 Spring\Summer Research\toypaillier\myPaillier\x64\Debug\"
   C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.1\bin\cudart32_91.dll
   C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.1\bin\cudart64_91.dll
