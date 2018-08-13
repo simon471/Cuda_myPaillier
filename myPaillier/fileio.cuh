@@ -10,7 +10,7 @@ using namespace std;
 
 //Prototype
 void genRandFile(pubkey, string, int);
-void createFIle(string);
+void createFile(string);
 void writeFile(unsigned long long*, string, int);
 void readFile(unsigned long long*, string, int);
 void keyWriteFile(pubkey, string);

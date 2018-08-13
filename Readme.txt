@@ -16,28 +16,59 @@ How to use .cu file:
 
 Update: seperated and organized all functions
 
-1. USE genKey first to get the public and private key
-2. USE genMessage to get Messages (it puts at the second because it need public key to work, message have to be smaller than n)
-3. RUN host_run or device_run in favor
+1. run genKey first to generate the public and private key
+2. run genMessage to generate Messages (it is at the second because it need public key to work, message have to be smaller than n)
+3. run host_run or device_run in favor
 
 genKey.cu
 	device code that generate public and private key
+
 genMessage.cpp
 	host code that generate two message array
+
 host_run.cpp
 	host code that take the key and message file and test the enc,dec and homo prop
+	
 device_run.cu
 	host code that take the key and message file and test the enc,dec and homo prop
+	
 arith.cuh
 	contains arithmetic functions
+		isPrime
+		gcd
+		lcm
+		L
+		power
+		powermod
+		mulmod
+		modInverse
+	
 fileio.cuh
 	contains file read and write functions
+		genRandFile
+		createFile
+		writeFile
+		readFile
+		keyWriteFile
+		keyReadFiel
+		
 hypernyms.cuh
 	contains encryption and decryption functions
+		enc
+		dec
+		
 keygen.cuh
 	contains key structur and setup function
+		struct pubkey and prvkey
+		setup
+		
 randPail.cuh
 	contains rng functions
+		primeGen
+		getRandZ
+		rng
+		rnghost
+		
 
 [Test record]
 n(# of messages): 100000
