@@ -20,8 +20,8 @@ Update:
 2. changed original genkey to device_genkey
 
 [Result]
-		        CPU		GPU
-key generation	2-10ms	4-11ms
+		          CPU		GPU
+key generation		2-10ms	4-11ms
 
 
 
