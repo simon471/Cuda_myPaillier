@@ -21,7 +21,7 @@ Update:
 
 [Result]
 		          CPU		GPU
-key generation		2-10ms	4-11ms
+key generation		2-10ms		4-11ms
 
 
 
