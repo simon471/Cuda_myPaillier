@@ -1,4 +1,5 @@
-﻿  myPaillier.vcxproj -> C:\Users\XPS 13\Desktop\School\2018 Spring\Summer Research\toypaillier\myPaillier\x64\Debug\myPaillier.exe
+﻿  host_genKey.cpp
+  myPaillier.vcxproj -> C:\Users\XPS 13\Desktop\School\2018 Spring\Summer Research\toypaillier\myPaillier\x64\Debug\myPaillier.exe
   copy "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.1\bin\cudart*.dll" "C:\Users\XPS 13\Desktop\School\2018 Spring\Summer Research\toypaillier\myPaillier\x64\Debug\"
   C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.1\bin\cudart32_91.dll
   C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.1\bin\cudart64_91.dll

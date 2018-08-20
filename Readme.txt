@@ -12,7 +12,20 @@ How to use .cu file:
 	>nvcc xxx.cu -o yyy
 	>yyy or >nvprof yyy
 
-13th Aug 2018:
+>> 20th Aug 2018:
+
+Update: 
+
+1. add host_genkey for key generation on host
+2. changed original genkey to device_genkey
+
+[Result]
+				CPU		GPU
+key generation	2-10ms	4-11ms
+
+
+
+>> 13th Aug 2018:
 
 Update: seperated and organized all functions
 
